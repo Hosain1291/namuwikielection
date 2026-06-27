@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나무위키 선거 인포박스 메이커 v3.8</title>
+  <title>나무위키 선거 인포박스 메이커 v3.9</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -154,9 +154,9 @@
       <div>
         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           나무위키 선거 인포박스 메이커
-          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v3.8</span>
+          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v3.9</span>
         </h1>
-        <p class="text-xs text-slate-400">오리지널 5칸 네비게이션 & 재보궐 종합 범주 테이블 구현</p>
+        <p class="text-xs text-slate-400">오리지널 5칸 네비게이션 & JSON 백업 데이터 연동</p>
       </div>
     </div>
 
@@ -262,14 +262,27 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-2 gap-4">
-        <button onclick="exportToImage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
-          <i class="fa-solid fa-image"></i> 이미지 저장 (.png)
-        </button>
-        <button onclick="copyWikiSyntax()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
-          <i class="fa-solid fa-code"></i> 나무위키 마크다운 복사
-        </button>
+      <!-- Action Buttons (Now includes JSON load & save options) -->
+      <div class="space-y-3">
+        <!-- Row 1: Image & Wiki Syntax Copy -->
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="exportToImage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-image"></i> 이미지 저장 (.png)
+          </button>
+          <button onclick="copyWikiSyntax()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-code"></i> 나무위키 마크다운 복사
+          </button>
+        </div>
+        <!-- Row 2: JSON Backup Operations -->
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="exportToJson()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-xs">
+            <i class="fa-solid fa-file-export"></i> JSON 데이터 내보내기
+          </button>
+          <label class="bg-violet-600 hover:bg-violet-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-xs cursor-pointer text-center">
+            <i class="fa-solid fa-file-import"></i> JSON 데이터 불러오기
+            <input type="file" id="json-import-file" accept=".json" class="hidden" onchange="importFromJson(event)">
+          </label>
+        </div>
       </div>
 
     </section>
@@ -992,6 +1005,64 @@
     function updateCommonMeta(field, val) {
       runtimeData[currentTemplate][field] = val;
       render();
+    }
+
+    // JSON Export - Saves current runtimeData as JSON file
+    function exportToJson() {
+      try {
+        const payload = {
+          version: '3.9',
+          exportedAt: new Date().toISOString(),
+          currentTemplate: currentTemplate,
+          selectedFont: selectedFont,
+          runtimeData: runtimeData
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `선거인포박스_데이터백업_${runtimeData[currentTemplate].title.replace(/ /g, '_')}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast("선거 데이터 백업 파일(JSON)을 정상적으로 다운로드했습니다.");
+      } catch (err) {
+        showToast("JSON 변환 중 오류가 발생했습니다: " + err.message);
+      }
+    }
+
+    // JSON Import - Restores runtimeData from a JSON backup file
+    function importFromJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          
+          if (parsed && parsed.runtimeData) {
+            runtimeData = parsed.runtimeData;
+            if (parsed.currentTemplate) {
+              currentTemplate = parsed.currentTemplate;
+            }
+            if (parsed.selectedFont) {
+              selectedFont = parsed.selectedFont;
+              changeFont(selectedFont);
+            }
+            
+            // Re-bootstrap UI with parsed data
+            selectTemplate(currentTemplate);
+            showToast("선거 백업 파일(JSON) 복원이 성공적으로 완료되었습니다!");
+          } else {
+            showToast("올바르지 않은 백업 파일 양식입니다. (runtimeData 속성 부재)");
+          }
+        } catch (err) {
+          showToast("JSON 파일 해석에 실패했습니다. 올바른 형식인지 확인하세요.");
+        }
+        // Reset file input so same file can be selected again
+        document.getElementById('json-import-file').value = '';
+      };
+      reader.readAsText(file);
     }
 
     // Global Render Engine mapping values directly to exact replica UI
