@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나무위키 선거 인포박스 메이커 v3.8</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- html2canvas for Image Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Google Web Fonts & Custom Fonts Declaration -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap">
+  
+  <style>
+    /* User Requested Fonts */
+    @font-face {
+      font-family: 'GMarketSans';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+      font-weight: 300;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GMarketSans';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+      font-weight: 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GMarketSans';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'OneStoreMobileGothicTitleFont';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-Title.woff') format('woff');
+      font-weight: normal;
+      font-display: swap;
+    }
+
+    @import url('//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css');
+    
+    @font-face {
+      font-family: 'NostalgicPoliceVibe';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-6@1.0/Griun_PolSensibility-Rg.woff2') format('woff2');
+      font-weight: normal;
+      font-display: swap;
+    }
+
+    /* Font Utility Classes applied to Infobox container */
+    .font-default { font-family: 'Noto Sans KR', sans-serif; }
+    .font-gmarket { font-family: 'GMarketSans', sans-serif; }
+    .font-onestore { font-family: 'OneStoreMobileGothicTitleFont', sans-serif; }
+    .font-spoqa { font-family: 'Spoqa Han Sans', sans-serif; font-weight: 700; }
+    .font-retro { font-family: 'NostalgicPoliceVibe', sans-serif; }
+
+    /* Scrollbar Style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* 나무위키 전용 테이블 표준 디자인 가이드라인 준수 */
+    .namu-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #373a3c;
+      border: 1px solid #ccc;
+    }
+    .namu-table th, .namu-table td {
+      border: 1px solid #ccc;
+      padding: 5px 6px;
+    }
+    .namu-header-left {
+      background-color: #f2f2f2;
+      font-weight: bold;
+      text-align: center;
+      width: 100px;
+      color: #373a3c;
+      font-size: 11.5px;
+    }
+    .namu-content-cell {
+      background-color: #ffffff;
+      text-align: left;
+      font-size: 11.5px;
+    }
+    .namu-title-bar {
+      color: #ffffff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 15px;
+      padding: 8px !important;
+      position: relative;
+    }
+    .namu-sub-title-bar {
+      color: #ffffff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 13px;
+      padding: 6px !important;
+    }
+    .namu-nav-row {
+      background-color: #ffffff;
+      font-size: 10.5px;
+      text-align: center;
+    }
+    .namu-media-placeholder {
+      background-color: #f8f9fa;
+      text-align: center;
+      vertical-align: middle;
+      padding: 0 !important;
+      position: relative;
+    }
+    .namu-progress-bar {
+      height: 10px;
+      border-radius: 0;
+      overflow: hidden;
+    }
+    
+    /* 아코디언 애니메이션용 */
+    .accordion-body {
+      transition: all 0.2s ease-out;
+    }
+    .collapsed {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-lg tracking-wider">W</div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          나무위키 선거 인포박스 메이커
+          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v3.8</span>
+        </h1>
+        <p class="text-xs text-slate-400">오리지널 5칸 네비게이션 & 재보궐 종합 범주 테이블 구현</p>
+      </div>
+    </div>
+
+    <!-- Font Tabs right next to version -->
+    <div class="flex flex-wrap items-center gap-3 bg-slate-850 p-1.5 rounded-lg border border-slate-700">
+      <span class="text-xs font-bold text-slate-400 px-2"><i class="fa-solid fa-font mr-1"></i> 인포박스 폰트</span>
+      <div class="inline-flex rounded-md shadow-sm" role="group">
+        <button onclick="changeFont('default')" id="btn-font-default" class="font-btn px-3 py-1.5 text-xs font-medium rounded-l-md bg-blue-600 hover:bg-blue-500 text-white transition">
+          기본 (Noto)
+        </button>
+        <button onclick="changeFont('gmarket')" id="btn-font-gmarket" class="font-btn px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          G마켓산스
+        </button>
+        <button onclick="changeFont('onestore')" id="btn-font-onestore" class="font-btn px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          원스토어고딕
+        </button>
+        <button onclick="changeFont('spoqa')" id="btn-font-spoqa" class="font-btn px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          스포카 (700)
+        </button>
+        <button onclick="changeFont('retro')" id="btn-font-retro" class="font-btn px-3 py-1.5 text-xs font-medium rounded-r-md bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          감성경찰체
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col lg:flex-row h-[calc(100vh-73px)] overflow-hidden">
+    
+    <!-- Left Panel: Control / Editor -->
+    <section class="w-full lg:w-1/2 p-6 overflow-y-auto border-r border-slate-800 bg-slate-900 flex flex-col space-y-6">
+      
+      <!-- Template Selection Tabs -->
+      <div class="bg-slate-850 p-4 rounded-xl border border-slate-800 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-blue-500"></i> 선거 유형 템플릿 선택
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button onclick="selectTemplate('national')" id="tab-national" class="template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200">
+            <i class="fa-solid fa-square-poll-vertical block text-base mb-1"></i>
+            1. 국민투표
+          </button>
+          <button onclick="selectTemplate('assembly')" id="tab-assembly" class="template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200">
+            <i class="fa-solid fa-landmark block text-base mb-1"></i>
+            2. 국회의원
+          </button>
+          <button onclick="selectTemplate('local')" id="tab-local" class="template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200">
+            <i class="fa-solid fa-map-location-dot block text-base mb-1"></i>
+            3. 지방선거
+          </button>
+          <button onclick="selectTemplate('by-election')" id="tab-by-election" class="template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200">
+            <i class="fa-solid fa-rotate block text-base mb-1"></i>
+            4. 재보궐선거
+          </button>
+          <button onclick="selectTemplate('presidential')" id="tab-presidential" class="template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200">
+            <i class="fa-solid fa-user-tie block text-base mb-1"></i>
+            5. 대통령선거
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Color Customizer -->
+      <div class="bg-slate-850 p-4 rounded-xl border border-slate-800 shadow-sm space-y-4">
+        <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+          <i class="fa-solid fa-palette text-blue-500"></i> 테이블 고유 색상 설정
+        </h2>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">메인 타이틀 배경색</label>
+            <div class="flex items-center space-x-2">
+              <input type="color" id="input-title-bg" oninput="updateColors()" class="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer">
+              <input type="text" id="input-title-bg-text" oninput="updateColorsText(this.value, 'title')" class="w-20 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 font-mono text-center text-slate-200">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">서브 타이틀 배경색</label>
+            <div class="flex items-center space-x-2">
+              <input type="color" id="input-sub-bg" oninput="updateColors()" class="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer">
+              <input type="text" id="input-sub-bg-text" oninput="updateColorsText(this.value, 'sub')" class="w-20 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 font-mono text-center text-slate-200">
+            </div>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label class="block text-xs text-slate-400 mb-1.5">선거 메인 타이틀</label>
+            <input type="text" id="input-main-title" oninput="render()" class="w-full bg-slate-800 text-xs px-3 py-1.5 rounded border border-slate-700 text-slate-200 font-bold">
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Editor Fields -->
+      <div class="bg-slate-850 p-5 rounded-xl border border-slate-800 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-blue-500"></i> 세부 데이터 커스텀 수정
+          </h2>
+          <button onclick="resetToDefaultData()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition">
+            <i class="fa-solid fa-arrow-rotate-left"></i> 데이터 복구
+          </button>
+        </div>
+
+        <div id="editor-fields-container" class="space-y-4">
+          <!-- Dynamically Injected Fields based on active template -->
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-4">
+        <button onclick="exportToImage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-image"></i> 이미지 저장 (.png)
+        </button>
+        <button onclick="copyWikiSyntax()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-code"></i> 나무위키 마크다운 복사
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Right Panel: Live Preview -->
+    <section class="w-full lg:w-1/2 p-6 bg-slate-950 flex flex-col items-center justify-start overflow-y-auto">
+      
+      <!-- Preview Frame -->
+      <div class="w-full max-w-md bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl relative mb-4">
+        <div class="absolute -top-3 left-6 bg-slate-850 border border-slate-700 text-slate-300 px-3 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+          실시간 나무위키 선거 인포박스
+        </div>
+
+        <!-- Capture Container -->
+        <div id="infobox-capture-area" class="bg-white p-2 rounded-lg shadow-inner overflow-hidden font-default">
+          
+          <table class="namu-table">
+            <tbody id="namu-table-tbody">
+              <!-- Dynamically rendered via JS to perfectly match each image layout -->
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 text-center leading-relaxed">
+        <i class="fa-solid fa-circle-info mr-1"></i> 본 인포박스는 실제 나무위키의 미디어 뷰어 규격과 완벽히 호환됩니다.<br>
+        동그라미 불릿 제거 및 벽보/의석도 이미지 완전 가공을 통해 리얼함을 극대화했습니다.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Custom Notification Bubble -->
+  <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-850 text-slate-100 border border-slate-750 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
+    <div class="bg-blue-600 text-white p-1 rounded-full"><i class="fa-solid fa-check w-4 h-4 flex items-center justify-center"></i></div>
+    <span id="toast-text" class="text-xs font-semibold">완료되었습니다.</span>
+  </div>
+
+  <script>
+    // State Values
+    let currentTemplate = 'national';
+    let selectedFont = 'default';
+
+    // Core Dataset replicating all 5 uploaded election snapshots in detail (Modified with <br> for dates)
+    const dataset = {
+      national: {
+        title: '제5차 국민투표',
+        subtitle: '1980년 대한민국 국민투표',
+        color1: '#ff7f00',
+        color2: '#ff8a12',
+        prev: '1975년 2월 12일<br>제4차 국민투표',
+        center: '1980년 10월 22일<br>제5차 국민투표',
+        next: '1987년 10월 27일<br>제6차 국민투표',
+        mediaImg: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop',
+        mediaCaption: '투표용지',
+        resultImg: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=600&auto=format&fit=crop',
+        resultCaption: '헌법개정안 가결',
+        reason: '개헌을 위한 헌법상 절차',
+        turnout: '95.5%',
+        proRatio: '91.6%',
+        conRatio: '7.0%',
+        fields: [
+          { label: '사유', val: '개헌을 위한 헌법상 절차' },
+          { label: '투표율', val: '95.5%' }
+        ]
+      },
+      assembly: {
+        title: '제20대 국회의원 선거',
+        subtitle: '대한민국의 국회의원 선거',
+        color1: '#800020',
+        color2: '#931a25',
+        prev: '2012년 4월 11일<br>19대 총선',
+        center: '2016년 4월 13일<br>20대 총선',
+        next: '2020년 4월 15일<br>21대 총선',
+        videoTitle: '[VIDEOMUG] 새누리 과반 확보 실패...더민주 선전',
+        videoSource: 'SBS 뉴스',
+        videoCaption: '출구조사 발표 영상',
+        videoUrl: 'https://www.youtube.com/embed/j_8j07Iunp0',
+        seatsImg: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop',
+        turnout: '58.0% ▲ 3.8%p',
+        parties: [
+          { name: '더불어민주당', local: '110석', proportional: '13석', total: 123, ratio: '41.0%', color: '#004EA2' },
+          { name: '새누리당', local: '105석', proportional: '17석', total: 122, ratio: '40.7%', color: '#E61E2B' },
+          { name: '국민의당', local: '25석', proportional: '13석', total: 38, ratio: '12.7%', color: '#00A85F' },
+          { name: '정의당', local: '2석', proportional: '4석', total: 6, ratio: '2.0%', color: '#FFCA08' },
+          { name: '무소속', local: '11석', proportional: '-', total: 11, ratio: '3.7%', color: '#888888' }
+        ],
+        fields: [
+          { label: '투표율', val: '58.0% ▲ 3.8%p' }
+        ]
+      },
+      local: {
+        title: '제9회 전국동시지방선거',
+        subtitle: '대한민국의 지방선거',
+        color1: '#e51a80',
+        color2: '#f03a93',
+        prev: '2022년 6월 1일<br>8회 지선',
+        center: '2026년 6월 3일<br>9회 지선',
+        next: '2030년 6월 12일<br>10회 지선',
+        videoTitle: '팽팽한 긴장감 속 "카운트다운"..뚜껑 연 출구조사에 "충격 결과"',
+        videoCaption: '출구조사 발표 영상',
+        videoUrl: 'https://www.youtube.com/embed/j_8j07Iunp0',
+        turnout: '61.04% ▲ 10.11%p',
+        sections: [
+          {
+            title: '광역자치단체장 선거 결과',
+            isFolded: true,
+            data: [
+              { party: '더불어민주당', count: '12석', ratio: '75%', color: '#004EA2' },
+              { party: '국민의힘', count: '4석', ratio: '25%', color: '#E61E2B' }
+            ]
+          },
+          {
+            title: '기초자치단체장 선거 결과',
+            isFolded: true,
+            data: [
+              { party: '더불어민주당', count: '119석', ratio: '52.4%', color: '#004EA2' },
+              { party: '국민의힘', count: '95석', ratio: '41.9%', color: '#E61E2B' },
+              { party: '조국혁신당', count: '2석', ratio: '0.9%', color: '#002E6E' },
+              { party: '무소속', count: '11석', ratio: '4.8%', color: '#888888' }
+            ]
+          },
+          {
+            title: '교육감 선거 결과',
+            isFolded: true,
+            data: [
+              { party: '진보', count: '10석', ratio: '62.5%', color: '#00A495' },
+              { party: '보수', count: '4석', ratio: '25%', color: '#E61E2B' },
+              { party: '중도', count: '2석', ratio: '12.5%', color: '#7a818c' }
+            ]
+          },
+          {
+            title: '광역의회의원 선거 결과',
+            isFolded: true,
+            data: [
+              { party: '더불어민주당', count: '588석', ratio: '63.02%', color: '#004EA2' },
+              { party: '국민의힘', count: '328석', ratio: '35.15%', color: '#E61E2B' },
+              { party: '진보당', count: '7석', ratio: '0.75%', color: '#D6001C' },
+              { party: '조국혁신당', count: '5석', ratio: '0.54%', color: '#002E6E' },
+              { party: '무소속', count: '5석', ratio: '0.54%', color: '#888888' }
+            ]
+          },
+          {
+            title: '기초의회의원 선거 결과',
+            isFolded: true,
+            data: [
+              { party: '더불어민주당', count: '1,574석', ratio: '51.86%', color: '#004EA2' },
+              { party: '국민의힘', count: '1,277석', ratio: '42.08%', color: '#E61E2B' },
+              { party: '진보당', count: '34석', ratio: '1.12%', color: '#D6001C' },
+              { party: '조국혁신당', count: '32석', ratio: '1.06%', color: '#002E6E' },
+              { party: '정의당', count: '6석', ratio: '0.20%', color: '#FFCA08' },
+              { party: '개혁신당', count: '1석', ratio: '0.03%', color: '#FF701E' },
+              { party: '녹색당', count: '1석', ratio: '0.03%', color: '#009F3C' },
+              { party: '무소속', count: '109석', ratio: '3.59%', color: '#888888' },
+              { party: '공식', count: '1석', ratio: '0.03%', color: '#333333' }
+            ]
+          }
+        ],
+        fields: [
+          { label: '투표율', val: '61.04% ▲ 10.11%p' }
+        ]
+      },
+      'by-election': {
+        title: '2025년 재보궐선거',
+        subtitle: '대한민국의 재보궐선거',
+        color1: '#009688',
+        color2: '#00bfa5',
+        prev: '2024년 10월 16일<br>2024년 하반기<br>재보궐선거',
+        center: '2025년 4월 2일<br>2025년 재보궐선거',
+        next: '2026년 6월 3일<sup>[1]</sup><br>2026년 재보궐선거',
+        videoCaption: '개표 영상',
+        videoUrl: 'https://www.youtube.com/embed/j_8j07Iunp0',
+        turnout: '26.26% ▲ 1.65%p',
+        tableData: [
+          { party: '더불어민주당', color: '#004EA2', assembly: '1석', regionalGov: '0석', localGov: '3석', regionalCouncil: '3석', localCouncil: '6석' },
+          { party: '국민의힘', color: '#E61E2B', assembly: '0석', regionalGov: '0석', localGov: '1석', regionalCouncil: '4석', localCouncil: '2석' },
+          { party: '조국혁신당', color: '#002E6E', assembly: '0석', regionalGov: '0석', localGov: '1석', regionalCouncil: '0석', localCouncil: '-' },
+          { party: '무소속', color: '#888888', assembly: '0석', regionalGov: '0석', localGov: '0석', regionalCouncil: '1석', localCouncil: '1석' }
+        ],
+        eduData: [
+          { type: '진보', color: '#00A495', seats: '1석' }
+        ],
+        fields: [
+          { label: '투표율', val: '26.26% ▲ 1.65%p' }
+        ]
+      },
+      presidential: {
+        title: '제21대 대통령 선거',
+        subtitle: '대한민국의 대통령 선거',
+        color1: '#0066cc',
+        color2: '#0080ff',
+        prev: '2022년 3월 9일<br>20대 대선',
+        center: '2025년 6월 3일<br>21대 대선',
+        next: '2030년 3월 27일<br>22대 대선',
+        posterImg: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop',
+        turnout: '79.38% ▲ 2.30%p',
+        candidate1: { name: '이재명', party: '더불어민주당', color: '#004EA2', ratio: '49.42%', votes: '17,287,513', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop' },
+        candidate2: { name: '김문수', party: '국민의힘', color: '#E61E2B', ratio: '41.15%', votes: '14,395,639' },
+        fields: [
+          { label: '투표율', val: '79.38% ▲ 2.30%p' }
+        ]
+      }
+    };
+
+    // Keep deep copies in runtime memory to track user edits
+    let runtimeData = JSON.parse(JSON.stringify(dataset));
+
+    // Handle Font Switching
+    function changeFont(fontId) {
+      selectedFont = fontId;
+      document.querySelectorAll('.font-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      const activeBtn = document.getElementById(`btn-font-${fontId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-800', 'text-slate-300');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+      }
+
+      const captureArea = document.getElementById('infobox-capture-area');
+      captureArea.className = 'bg-white p-2 rounded-lg shadow-inner overflow-hidden font-' + fontId;
+    }
+
+    // Toggle Accordion Rows for Local Elections
+    function toggleAccordion(index) {
+      if (currentTemplate !== 'local') return;
+      runtimeData.local.sections[index].isFolded = !runtimeData.local.sections[index].isFolded;
+      render();
+    }
+
+    // Colors Modifier
+    function updateColors() {
+      const col1 = document.getElementById('input-title-bg').value;
+      const col2 = document.getElementById('input-sub-bg').value;
+      document.getElementById('input-title-bg-text').value = col1;
+      document.getElementById('input-sub-bg-text').value = col2;
+
+      runtimeData[currentTemplate].color1 = col1;
+      runtimeData[currentTemplate].color2 = col2;
+      render();
+    }
+
+    function updateColorsText(hexVal, target) {
+      if (/^#[0-9A-F]{6}$/i.test(hexVal)) {
+        if (target === 'title') {
+          document.getElementById('input-title-bg').value = hexVal;
+        } else {
+          document.getElementById('input-sub-bg').value = hexVal;
+        }
+        runtimeData[currentTemplate].color1 = document.getElementById('input-title-bg').value;
+        runtimeData[currentTemplate].color2 = document.getElementById('input-sub-bg').value;
+        render();
+      }
+    }
+
+    // Image Upload Processor (Transforms selected local files into Base64 smoothly)
+    function handleImageUpload(event, targetTemplate, targetField) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          runtimeData[targetTemplate][targetField] = e.target.result;
+          render();
+          const textInput = document.getElementById(`input-${targetTemplate}-${targetField}`);
+          if (textInput) {
+            textInput.value = "[로컬 이미지 세팅 완료]";
+          }
+          showToast("로컬 이미지가 성공적으로 반영되었습니다!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Candidate Photo Image Upload Processor
+    function handleCandidateImageUpload(event, targetTemplate, candidateKey) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          runtimeData[targetTemplate][candidateKey].img = e.target.result;
+          render();
+          const textInput = document.getElementById(`input-${targetTemplate}-${candidateKey}-img`);
+          if (textInput) {
+            textInput.value = "[로컬 당선인 이미지 세팅 완료]";
+          }
+          showToast("당선인 인물사진이 반영되었습니다!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Swaps templates
+    function selectTemplate(templateId) {
+      currentTemplate = templateId;
+      
+      document.querySelectorAll('.template-tab').forEach(tab => {
+        tab.className = "template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200 bg-slate-800 border-slate-750 text-slate-300 hover:bg-slate-750";
+      });
+      const activeTab = document.getElementById(`tab-${templateId}`);
+      activeTab.className = "template-tab py-2.5 px-2 rounded-lg text-xs font-bold text-center border transition-all duration-200 bg-blue-600 border-blue-500 text-white shadow-md";
+
+      // Synchronize Design Color Pickers
+      document.getElementById('input-title-bg').value = runtimeData[currentTemplate].color1;
+      document.getElementById('input-sub-bg').value = runtimeData[currentTemplate].color2;
+      document.getElementById('input-title-bg-text').value = runtimeData[currentTemplate].color1;
+      document.getElementById('input-sub-bg-text').value = runtimeData[currentTemplate].color2;
+      document.getElementById('input-main-title').value = runtimeData[currentTemplate].title;
+
+      buildEditorFields();
+      render();
+    }
+
+    // Reusable Video Player Generator (Supports YouTube and direct MP4/WebM video formats)
+    function buildVideoEmbedHTML(videoUrl, title, caption) {
+      if (!videoUrl) {
+        return `
+          <div class="relative bg-black h-48 flex items-center justify-center overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover opacity-65">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+            <div class="absolute bottom-3 left-3 text-left">
+              <span class="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded mb-1 inline-block">비디오 대기</span>
+              <div class="text-white text-[11px] font-bold leading-tight line-clamp-2">${title || '등록된 비디오 정보가 없습니다.'}</div>
+            </div>
+            <div class="absolute w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center cursor-pointer">
+              <i class="fa-solid fa-play text-white text-lg ml-0.5"></i>
+            </div>
+          </div>
+          <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '동영상 안내'}</div>
+        `;
+      }
+
+      // 1. YouTube Handler
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.includes('/embed/')) {
+        let embedUrl = videoUrl;
+        if (!videoUrl.includes('/embed/')) {
+          let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+          let match = videoUrl.match(regExp);
+          if (match && match[2].length == 11) {
+            embedUrl = `https://www.youtube.com/embed/${match[2]}`;
+          }
+        }
+        return `
+          <div class="w-full h-48 bg-black">
+            <iframe class="w-full h-full" src="${embedUrl}" title="YouTube Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || 'YouTube 실시간 중계방송'}</div>
+        `;
+      }
+
+      // 2. Direct Video File (.mp4, .webm, etc.)
+      if (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg') || videoUrl.includes('.mp4?') || videoUrl.includes('.webm?')) {
+        return `
+          <div class="w-full h-48 bg-black">
+            <video class="w-full h-full" controls playsinline>
+              <source src="${videoUrl}" type="video/mp4">
+              사용 중인 브라우저는 동영상 재생을 지원하지 않습니다.
+            </video>
+          </div>
+          <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '재생 가능한 동영상'}</div>
+        `;
+      }
+
+      // 3. Fallback Link Preview
+      return `
+        <a href="${videoUrl}" target="_blank" class="block relative bg-black h-48 flex items-center justify-center overflow-hidden hover:opacity-90 transition">
+          <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover opacity-65">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+          <div class="absolute bottom-3 left-3 text-left">
+            <span class="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded mb-1 inline-block">외부 미디어 링크</span>
+            <div class="text-white text-[11px] font-bold leading-tight line-clamp-2">${title || '미디어 주소 바로가기'}</div>
+          </div>
+          <div class="absolute w-12 h-12 bg-slate-700/90 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-up-right-from-square text-white text-base"></i>
+          </div>
+        </a>
+        <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '외부 비디오 플레이어 연결'}</div>
+      `;
+    }
+
+    // Dynamically Injects Interactive Forms
+    function buildEditorFields() {
+      const container = document.getElementById('editor-fields-container');
+      container.innerHTML = '';
+      const config = runtimeData[currentTemplate];
+
+      // Left Form 1: Common Subtitle & 5-Column Navigation inputs
+      let commonHTML = `
+        <div class="grid grid-cols-1 gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-800 mb-4">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">선거 서브타이틀</label>
+            <input type="text" value="${config.subtitle}" oninput="updateCommonMeta('subtitle', this.value)" class="w-full bg-slate-800 text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-200">
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">이전 선거 (&lt;br&gt; 개행)</label>
+              <input type="text" value="${config.prev}" oninput="updateCommonMeta('prev', this.value)" class="w-full bg-slate-800 text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">현재 선거 (&lt;br&gt; 개행)</label>
+              <input type="text" value="${config.center}" oninput="updateCommonMeta('center', this.value)" class="w-full bg-slate-800 text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">다음 선거 (&lt;br&gt; 개행)</label>
+              <input type="text" value="${config.next}" oninput="updateCommonMeta('next', this.value)" class="w-full bg-slate-800 text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono">
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', commonHTML);
+
+      // Left Form 2: Dynamic Fields per Template style
+      if (currentTemplate === 'national') {
+        let nationalHTML = `
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">국민투표 개표 현황</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">사유</label>
+                <input type="text" value="${config.reason}" oninput="runtimeData.national.reason = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">투표율</label>
+                <input type="text" value="${config.turnout}" oninput="runtimeData.national.turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">찬성비율 (%)</label>
+                <input type="text" value="${config.proRatio}" oninput="runtimeData.national.proRatio = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">반대비율 (%)</label>
+                <input type="text" value="${config.conRatio}" oninput="runtimeData.national.conRatio = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono">
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', nationalHTML);
+
+      } else if (currentTemplate === 'assembly') {
+        let assemblyHTML = `
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">미디어 & 의석 이미지 연동</h3>
+            <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 링크 (유튜브 embed / watch 또는 mp4 비디오 주소)</label>
+                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.assembly.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="https://www.youtube.com/embed/...">
+              </div>
+              
+              <!-- 이미지 및 파일 동시 선택 컨트롤 영역 -->
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">국회 의석 분포 이미지 설정</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-assembly-seatsImg" value="${config.seatsImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.seatsImg}" oninput="runtimeData.assembly.seatsImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="이미지 URL 입력">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'assembly', 'seatsImg')">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4">
+              <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">정당별 의석 배치 데이터</h3>
+              <button onclick="addAssemblyParty()" class="text-[10px] bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30"><i class="fa-solid fa-plus mr-1"></i>정당 추가</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">총 투표율</label>
+                <input type="text" value="${config.turnout}" oninput="runtimeData.assembly.turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+              </div>
+            </div>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+              ${config.parties.map((p, i) => `
+                <div class="grid grid-cols-12 gap-1.5 items-center bg-slate-900/60 p-2 rounded border border-slate-800 text-xs">
+                  <div class="col-span-3">
+                    <input type="text" value="${p.name}" oninput="updateAssemblyParty(${i}, 'name', this.value)" class="w-full bg-slate-800 text-[11px] px-1.5 py-1 rounded border border-slate-700 text-slate-200 font-bold">
+                  </div>
+                  <div class="col-span-2">
+                    <input type="text" placeholder="지" value="${p.local}" oninput="updateAssemblyParty(${i}, 'local', this.value)" class="w-full bg-slate-800 text-[11px] px-1 py-1 rounded border border-slate-700 text-slate-200 text-center">
+                  </div>
+                  <div class="col-span-2">
+                    <input type="text" placeholder="비" value="${p.proportional}" oninput="updateAssemblyParty(${i}, 'proportional', this.value)" class="w-full bg-slate-800 text-[11px] px-1 py-1 rounded border border-slate-700 text-slate-200 text-center">
+                  </div>
+                  <div class="col-span-2">
+                    <input type="number" placeholder="총" value="${p.total}" oninput="updateAssemblyParty(${i}, 'total', this.value)" class="w-full bg-slate-800 text-[11px] px-1 py-1 rounded border border-slate-700 text-slate-200 text-center">
+                  </div>
+                  <div class="col-span-2 flex items-center gap-1">
+                    <input type="color" value="${p.color}" oninput="updateAssemblyParty(${i}, 'color', this.value)" class="w-5 h-5 bg-transparent cursor-pointer">
+                  </div>
+                  <div class="col-span-1 text-center">
+                    <button onclick="removeAssemblyParty(${i})" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', assemblyHTML);
+
+      } else if (currentTemplate === 'local') {
+        let localHTML = `
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold text-pink-400 border-l-2 border-pink-500 pl-2">지방선거 미디어 & 아코디언 설정</h3>
+            <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">선거 중계 영상 링크</label>
+                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.local.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 및 비디오 파일 링크">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="col-span-2">
+                <label class="block text-[11px] text-slate-400 mb-1">투표율</label>
+                <input type="text" value="${config.turnout}" oninput="runtimeData.local.turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-200">
+              </div>
+            </div>
+            <div class="space-y-3">
+              ${config.sections.map((sec, secIdx) => `
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-800">
+                    <span class="text-xs font-bold text-slate-300">${sec.title}</span>
+                    <button onclick="addLocalRow(${secIdx})" class="text-[9px] bg-pink-600/20 text-pink-300 px-1.5 py-0.5 rounded hover:bg-pink-600/40"><i class="fa-solid fa-plus mr-1"></i>추가</button>
+                  </div>
+                  <div class="space-y-1.5 max-h-36 overflow-y-auto">
+                    ${sec.data.map((item, rowIdx) => `
+                      <div class="grid grid-cols-12 gap-1 items-center">
+                        <input type="text" value="${item.party}" oninput="updateLocalData(${secIdx}, ${rowIdx}, 'party', this.value)" class="col-span-4 bg-slate-800 text-[11px] px-1 py-0.5 rounded border border-slate-700 text-slate-200">
+                        <input type="text" value="${item.count}" oninput="updateLocalData(${secIdx}, ${rowIdx}, 'count', this.value)" class="col-span-3 bg-slate-800 text-[11px] px-1 py-0.5 rounded border border-slate-700 text-slate-200 text-center">
+                        <input type="text" value="${item.ratio}" oninput="updateLocalData(${secIdx}, ${rowIdx}, 'ratio', this.value)" class="col-span-3 bg-slate-800 text-[11px] px-1 py-0.5 rounded border border-slate-700 text-slate-200 text-center font-mono">
+                        <input type="color" value="${item.color}" oninput="updateLocalData(${secIdx}, ${rowIdx}, 'color', this.value)" class="col-span-1 w-4 h-4 bg-transparent cursor-pointer mx-auto">
+                        <button onclick="removeLocalRow(${secIdx}, ${rowIdx})" class="col-span-1 text-red-400 hover:text-red-350 text-center"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', localHTML);
+
+      } else if (currentTemplate === 'by-election') {
+        let byHTML = `
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold text-teal-400 border-l-2 border-teal-500 pl-2">2025 재보선 결과 및 동영상</h3>
+            <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">중계 영상 링크 (YouTube / MP4)</label>
+                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData['by-election'].videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="영상 주소">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div class="col-span-2">
+                <label class="block text-[11px] text-slate-400 mb-1">투표율</label>
+                <input type="text" value="${config.turnout}" oninput="runtimeData['by-election'].turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-200">
+              </div>
+            </div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-bold text-teal-300">정당별 종합 당선 현황 (5개 선거 모두 조율 가능)</span>
+              <button onclick="addByElectionRow()" class="text-[9px] bg-teal-600/20 text-teal-300 px-1.5 py-0.5 rounded hover:bg-teal-600/40"><i class="fa-solid fa-plus mr-1"></i>정당 추가</button>
+            </div>
+            <p class="text-[10px] text-amber-400 font-medium leading-tight mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i>모든 정당에서 0석/0/- 으로 표시된 공직 열은 인포박스 표에서 자동으로 숨겨집니다.</p>
+            <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+              ${config.tableData.map((row, i) => `
+                <div class="bg-slate-900/60 p-2.5 rounded border border-slate-800 space-y-1.5 text-[11px]">
+                  <div class="flex items-center justify-between">
+                    <input type="text" value="${row.party}" oninput="updateByElectionRow(${i}, 'party', this.value)" class="bg-slate-800 font-bold px-2 py-0.5 rounded border border-slate-700 text-slate-200 w-28">
+                    <input type="color" value="${row.color}" oninput="updateByElectionRow(${i}, 'color', this.value)" class="w-5 h-5 bg-transparent cursor-pointer">
+                    <button onclick="removeByElectionRow(${i})" class="text-red-400 hover:text-red-350"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                  <div class="grid grid-cols-5 gap-1 text-center">
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">국회의원</span>
+                      <input type="text" value="${row.assembly}" oninput="updateByElectionRow(${i}, 'assembly', this.value)" class="w-full bg-slate-850 text-center rounded border border-slate-700 py-0.5 text-slate-300 font-bold">
+                    </div>
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">광역단체</span>
+                      <input type="text" value="${row.regionalGov}" oninput="updateByElectionRow(${i}, 'regionalGov', this.value)" class="w-full bg-slate-850 text-center rounded border border-slate-700 py-0.5 text-slate-300 font-bold">
+                    </div>
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">기초단체</span>
+                      <input type="text" value="${row.localGov}" oninput="updateByElectionRow(${i}, 'localGov', this.value)" class="w-full bg-slate-850 text-center rounded border border-slate-700 py-0.5 text-slate-300 font-bold">
+                    </div>
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">광역의원</span>
+                      <input type="text" value="${row.regionalCouncil}" oninput="updateByElectionRow(${i}, 'regionalCouncil', this.value)" class="w-full bg-slate-850 text-center rounded border border-slate-700 py-0.5 text-slate-300 font-bold">
+                    </div>
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">기초의원</span>
+                      <input type="text" value="${row.localCouncil}" oninput="updateByElectionRow(${i}, 'localCouncil', this.value)" class="w-full bg-slate-850 text-center rounded border border-slate-700 py-0.5 text-slate-300 font-bold">
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', byHTML);
+
+      } else if (currentTemplate === 'presidential') {
+        let presidentialHTML = `
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">대통령 선거 설정</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div class="col-span-2">
+                <label class="block text-[11px] text-slate-400 mb-1">투표율</label>
+                <input type="text" value="${config.turnout}" oninput="runtimeData.presidential.turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-200">
+              </div>
+            </div>
+
+            <!-- 선거 벽보 등록 영역 -->
+            <div class="bg-slate-900/65 p-3 rounded-lg border border-slate-800 space-y-2">
+              <div class="text-xs font-bold text-amber-400"><i class="fa-solid fa-image"></i> 선거 벽보 이미지 설정</div>
+              <div class="flex gap-2">
+                <input type="text" id="input-presidential-posterImg" value="${config.posterImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.posterImg}" oninput="runtimeData.presidential.posterImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="벽보 이미지 URL 주소 입력">
+                <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                  파일 선택
+                  <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'presidential', 'posterImg')">
+                </label>
+              </div>
+            </div>
+            
+            <div class="bg-slate-900/65 p-3 rounded-lg border border-slate-800 space-y-2">
+              <div class="text-xs font-bold text-blue-300">후보 1 (당선인) 설정</div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <input type="text" value="${config.candidate1.name}" oninput="runtimeData.presidential.candidate1.name=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200" placeholder="성명">
+                <input type="text" value="${config.candidate1.party}" oninput="runtimeData.presidential.candidate1.party=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200" placeholder="정당">
+                <input type="color" value="${config.candidate1.color}" oninput="runtimeData.presidential.candidate1.color=this.value; render();" class="w-full h-7 bg-transparent cursor-pointer">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" value="${config.candidate1.ratio}" oninput="runtimeData.presidential.candidate1.ratio=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="득표율">
+                <input type="text" value="${config.candidate1.votes}" oninput="runtimeData.presidential.candidate1.votes=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="득표수">
+              </div>
+              
+              <!-- 당선인 인물사진 로컬 파일 업로드 연동 -->
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">당선인 대형 사진 이미지 설정</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-presidential-candidate1-img" value="${config.candidate1.img.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.candidate1.img}" oninput="runtimeData.presidential.candidate1.img=this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-300 font-mono" placeholder="당선인 사진 URL 주소 입력">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleCandidateImageUpload(event, 'presidential', 'candidate1')">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/65 p-3 rounded-lg border border-slate-800 space-y-2">
+              <div class="text-xs font-bold text-red-300">후보 2 설정</div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <input type="text" value="${config.candidate2.name}" oninput="runtimeData.presidential.candidate2.name=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200" placeholder="성명">
+                <input type="text" value="${config.candidate2.party}" oninput="runtimeData.presidential.candidate2.party=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200" placeholder="정당">
+                <input type="color" value="${config.candidate2.color}" oninput="runtimeData.presidential.candidate2.color=this.value; render();" class="w-full h-7 bg-transparent cursor-pointer">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" value="${config.candidate2.ratio}" oninput="runtimeData.presidential.candidate2.ratio=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="득표율">
+                <input type="text" value="${config.candidate2.votes}" oninput="runtimeData.presidential.candidate2.votes=this.value; render();" class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="득표수">
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', presidentialHTML);
+      }
+    }
+
+    // Assembly Party Data Handlers
+    function updateAssemblyParty(idx, field, val) {
+      if (field === 'total') {
+        runtimeData.assembly.parties[idx][field] = parseInt(val) || 0;
+      } else {
+        runtimeData.assembly.parties[idx][field] = val;
+      }
+      render();
+    }
+    function addAssemblyParty() {
+      runtimeData.assembly.parties.push({ name: '신생당', local: '1석', proportional: '-', total: 1, ratio: '0.3%', color: '#cccccc' });
+      buildEditorFields();
+      render();
+    }
+    function removeAssemblyParty(idx) {
+      runtimeData.assembly.parties.splice(idx, 1);
+      buildEditorFields();
+      render();
+    }
+
+    // Local Accordion Data Handlers
+    function updateLocalData(secIdx, rowIdx, field, val) {
+      runtimeData.local.sections[secIdx].data[rowIdx][field] = val;
+      render();
+    }
+    function addLocalRow(secIdx) {
+      runtimeData.local.sections[secIdx].data.push({ party: '새정당', count: '1석', ratio: '5%', color: '#999999' });
+      buildEditorFields();
+      render();
+    }
+    function removeLocalRow(secIdx, rowIdx) {
+      runtimeData.local.sections[secIdx].data.splice(rowIdx, 1);
+      buildEditorFields();
+      render();
+    }
+
+    // By Election Data Handlers
+    function updateByElectionRow(idx, field, val) {
+      runtimeData['by-election'].tableData[idx][field] = val;
+      render();
+    }
+    function addByElectionRow() {
+      runtimeData['by-election'].tableData.push({ party: '신생당', color: '#777777', assembly: '-', regionalGov: '-', localGov: '1석', regionalCouncil: '-', localCouncil: '-' });
+      buildEditorFields();
+      render();
+    }
+    function removeByElectionRow(idx) {
+      runtimeData['by-election'].tableData.splice(idx, 1);
+      buildEditorFields();
+      render();
+    }
+
+    // Update state text fields
+    function updateCommonMeta(field, val) {
+      runtimeData[currentTemplate][field] = val;
+      render();
+    }
+
+    // Global Render Engine mapping values directly to exact replica UI
+    function render() {
+      const config = runtimeData[currentTemplate];
+      const tbody = document.getElementById('namu-table-tbody');
+      tbody.innerHTML = '';
+
+      // Set main title in design inputs
+      const titleVal = document.getElementById('input-main-title').value;
+      config.title = titleVal;
+
+      // Reusable 5-column Navigation row builder with fluid colspan support
+      function buildNamuNavRowHTML(totalCols) {
+        if (totalCols >= 5) {
+          const remaining = totalCols - 3; // Arrows and center take up 3 physical <td> elements
+          const leftColspan = Math.floor(remaining / 2);
+          const rightColspan = remaining - leftColspan;
+          return `
+            <tr class="namu-nav-row font-semibold">
+              <td colspan="${leftColspan}" style="padding: 6px 4px; vertical-align: middle;" class="text-sky-600 text-center bg-slate-50 leading-tight border-r">
+                ${config.prev}
+              </td>
+              <td style="width: 25px; padding: 6px 2px; vertical-align: middle;" class="text-slate-400 text-center bg-slate-100 font-bold border-r">
+                →
+              </td>
+              <td style="padding: 6px 4px; vertical-align: middle;" class="text-slate-800 text-center bg-white font-black leading-tight border-r">
+                ${config.center}
+              </td>
+              <td style="width: 25px; padding: 6px 2px; vertical-align: middle;" class="text-slate-400 text-center bg-slate-100 font-bold border-r">
+                →
+              </td>
+              <td colspan="${rightColspan}" style="padding: 6px 4px; vertical-align: middle;" class="text-sky-600 text-center bg-slate-50 leading-tight">
+                ${config.next}
+              </td>
+            </tr>
+          `;
+        } else {
+          // Fallback simple 3-column nav for small grids
+          const colSize = Math.floor(totalCols / 3) || 1;
+          const centerSize = totalCols - (colSize * 2);
+          return `
+            <tr class="namu-nav-row font-semibold">
+              <td colspan="${colSize}" style="padding: 6px 4px; vertical-align: middle;" class="text-sky-600 text-center bg-slate-50 leading-tight border-r">
+                ${config.prev}
+              </td>
+              <td colspan="${centerSize}" style="padding: 6px 4px; vertical-align: middle;" class="text-slate-800 text-center bg-white font-black leading-tight border-r">
+                ${config.center}
+              </td>
+              <td colspan="${colSize}" style="padding: 6px 4px; vertical-align: middle;" class="text-sky-600 text-center bg-slate-50 leading-tight">
+                ${config.next}
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      // 1. Common Table Headers
+      // The default colspan is 5, but for by-elections, it dynamically matches totalCols
+      let colspanVal = 5;
+      let activeColumns = [];
+
+      if (currentTemplate === 'by-election') {
+        const columnsSchema = [
+          { id: 'assembly', label: '국회의원' },
+          { id: 'regionalGov', label: '광역단체' },
+          { id: 'localGov', label: '기초단체' },
+          { id: 'regionalCouncil', label: '광역의원' },
+          { id: 'localCouncil', label: '기초의원' }
+        ];
+
+        // Filter out columns where EVERY SINGLE party has "0석", "0", "-", or is empty/white space
+        activeColumns = columnsSchema.filter(col => {
+          return config.tableData.some(row => {
+            const val = (row[col.id] || '').trim();
+            return val !== '0석' && val !== '0' && val !== '-' && val !== '' && val !== '0';
+          });
+        });
+
+        // Safe fallback in case everything is 0: force showing at least 1 column so the grid doesn't collapse
+        if (activeColumns.length === 0) {
+          activeColumns = [columnsSchema[0]];
+        }
+
+        colspanVal = 1 + activeColumns.length;
+      }
+
+      let headerHTML = `
+        <tr>
+          <td colspan="${colspanVal}" class="namu-title-bar select-none" style="background-color: ${config.color1};">
+            <span class="font-bold">${config.title}</span>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="${colspanVal}" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">
+            <span class="font-bold">${config.subtitle}</span>
+          </td>
+        </tr>
+      `;
+      tbody.insertAdjacentHTML('beforeend', headerHTML);
+
+      // 2. Custom Layout Inner Rows per Select template (100% snapshot alignment)
+      if (currentTemplate === 'national') {
+        // 이미지 1: 국민투표 전용 렌더링
+        let templateRows = `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder">
+              <img src="${config.mediaImg}" alt="투표용지" class="w-full h-44 object-cover animate-fade-in">
+              <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${config.mediaCaption}</div>
+            </td>
+          </tr>
+          <!-- 내비게이션 라인 -->
+          ${buildNamuNavRowHTML(5)}
+          <tr>
+            <td class="namu-header-left">사유</td>
+            <td colspan="4" class="namu-content-cell text-sky-600 font-semibold">${config.reason}</td>
+          </tr>
+          <tr>
+            <td class="namu-header-left">투표율</td>
+            <td colspan="4" class="namu-content-cell">${config.turnout}</td>
+          </tr>
+          <!-- 개표 헤더 -->
+          <tr>
+            <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">개표</td>
+          </tr>
+          <!-- 개표 찬/반 아이콘 및 텍스트 -->
+          <tr class="bg-white">
+            <td colspan="5" class="p-2">
+              <div class="flex justify-around items-center text-center py-2">
+                <div>
+                  <span class="bg-blue-800 text-white font-bold text-xs px-2 py-0.5 rounded shadow">찬성</span>
+                  <div class="font-black text-sm text-slate-800 mt-2">${config.proRatio}</div>
+                </div>
+                <div>
+                  <span class="bg-red-600 text-white font-bold text-xs px-2 py-0.5 rounded shadow">반대</span>
+                  <div class="font-black text-sm text-slate-800 mt-2">${config.conRatio}</div>
+                </div>
+              </div>
+              <!-- 정밀 가로 프로그레스 바 -->
+              <div class="namu-progress-bar flex w-full bg-slate-200 mt-1">
+                <div style="width: ${parseFloat(config.proRatio)}%; background-color: #0000ff;"></div>
+                <div class="bg-slate-300" style="width: ${100 - parseFloat(config.proRatio) - parseFloat(config.conRatio)}%;"></div>
+                <div style="width: ${parseFloat(config.conRatio)}%; background-color: #ff0000;"></div>
+              </div>
+            </td>
+          </tr>
+          <!-- 결과 기사 헤더 -->
+          <tr>
+            <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">결과</td>
+          </tr>
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              <img src="${config.resultImg}" alt="헌법개정 가결" class="w-full h-40 object-cover">
+              <div class="bg-blue-800 text-white font-bold text-center py-1.5 text-xs tracking-wider">${config.resultCaption}</div>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', templateRows);
+
+      } else if (currentTemplate === 'assembly') {
+        // 이미지 2: 국회의원 총선 전용 렌더링
+        let partiesHTML = config.parties.map(p => {
+          return `
+            <tr>
+              <td class="namu-content-cell font-bold text-center flex items-center justify-center py-2">
+                <span class="text-white text-[10px] px-1.5 py-0.5 rounded font-black shadow-sm" style="background-color: ${p.color}">${p.name}</span>
+              </td>
+              <td class="namu-content-cell text-center font-semibold">${p.local}</td>
+              <td class="namu-content-cell text-center font-semibold">${p.proportional}</td>
+              <td class="namu-content-cell text-center font-black">${p.total}석</td>
+              <td class="namu-content-cell text-center text-slate-500 font-mono text-[11px]">${p.ratio}</td>
+            </tr>
+          `;
+        }).join('');
+
+        let templateRows = `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              ${buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption)}
+            </td>
+          </tr>
+          <!-- 내비게이션 라인 -->
+          ${buildNamuNavRowHTML(5)}
+          <tr>
+            <td class="namu-header-left">투표율</td>
+            <td colspan="4" class="namu-content-cell font-semibold">${config.turnout}</td>
+          </tr>
+          <!-- 선거 결과 대헤더 -->
+          <tr>
+            <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">선거 결과</td>
+          </tr>
+          <!-- 국회의원 의석 분포 이미지 -->
+          <tr>
+            <td colspan="5" class="bg-slate-50 p-3 border-b text-center">
+              <img src="${config.seatsImg}" alt="국회 의석 분포" class="w-full h-auto object-contain max-h-56 mx-auto rounded border border-slate-200 shadow-sm" onerror="this.outerHTML='<div class=\'py-6 text-slate-400 text-xs font-bold\'>[의석 분포 이미지 로드 실패/미등록]</div>'">
+              <div class="text-[10px] text-slate-500 mt-2 font-semibold">제20대 국회 정당별 의석 분포 상황</div>
+            </td>
+          </tr>
+          <!-- 상세 표 헤더 -->
+          <tr class="bg-slate-100 font-bold text-center text-slate-700 text-[11px]">
+            <td style="width: 25%">정당</td>
+            <td style="width: 18%">지역구</td>
+            <td style="width: 18%">비례대표</td>
+            <td style="width: 20%">총합</td>
+            <td style="width: 19%">비율</td>
+          </tr>
+          ${partiesHTML}
+        `;
+        tbody.insertAdjacentHTML('beforeend', templateRows);
+
+      } else if (currentTemplate === 'local') {
+        // 이미지 3: 전국동시지방선거 전용 렌더링
+        let sectionRows = config.sections.map((sec, secIdx) => {
+          let sectionBodyHTML = sec.data.map(item => {
+            return `
+              <div class="grid grid-cols-12 gap-1 items-center bg-white p-2 border-b border-slate-200 hover:bg-slate-50 text-xs">
+                <div class="col-span-4 font-bold text-slate-800 flex items-center justify-start pl-2">
+                  <span class="text-white text-[10px] px-1.5 py-0.5 rounded font-black shadow-sm" style="background-color: ${item.color}">${item.party}</span>
+                </div>
+                <!-- 점유율 시각화 바 -->
+                <div class="col-span-4 px-1">
+                  <div class="w-full bg-slate-100 rounded-sm h-3 overflow-hidden border border-slate-200">
+                    <div class="h-full rounded-sm" style="width: ${parseFloat(item.ratio)}%; background-color: ${item.color}"></div>
+                  </div>
+                </div>
+                <div class="col-span-2 text-center font-bold text-slate-700">${item.count}</div>
+                <div class="col-span-2 text-right font-bold text-pink-600 text-[10px]">${item.ratio}</div>
+              </div>
+            `;
+          }).join('');
+
+          // Accordion wrapper
+          return `
+            <!-- 섹션 헤더 -->
+            <tr>
+              <td colspan="5" class="p-0 border-none">
+                <div onclick="toggleAccordion(${secIdx})" class="bg-pink-100 hover:bg-pink-200 py-1.5 px-3 flex justify-between items-center cursor-pointer transition select-none border border-pink-200 border-b-0">
+                  <span class="text-xs font-black text-pink-700">${sec.title}</span>
+                  <span class="text-[10px] text-pink-600 bg-white border border-pink-300 px-1.5 py-0.5 rounded font-bold shadow-sm">
+                    ${sec.isFolded ? '[ 펼치기 ]' : '[ 접기 ]'}
+                  </span>
+                </div>
+                <div class="accordion-body ${sec.isFolded ? 'collapsed' : ''} bg-slate-50 border border-slate-300 border-t-0">
+                  <div class="grid grid-cols-12 bg-slate-100 p-2 border-b border-slate-200 text-[10.5px] font-bold text-slate-500 text-center">
+                    <div class="col-span-4 text-left pl-3">정당</div>
+                    <div class="col-span-4">점유율 시각화</div>
+                    <div class="col-span-2">당선인 수</div>
+                    <div class="col-span-2 text-right pr-2">비율</div>
+                  </div>
+                  ${sectionBodyHTML}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        let templateRows = `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              ${buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption)}
+            </td>
+          </tr>
+          ${buildNamuNavRowHTML(5)}
+          <tr>
+            <td class="namu-header-left">투표율</td>
+            <td colspan="4" class="namu-content-cell font-semibold">${config.turnout}</td>
+          </tr>
+          ${sectionRows}
+        `;
+        tbody.insertAdjacentHTML('beforeend', templateRows);
+
+      } else if (currentTemplate === 'by-election') {
+        // 이미지 4: 재보궐선거 전용 렌더링 (0석 필터에 반응해 유동적으로 폭 조절)
+        let byRows = config.tableData.map(row => {
+          let colsHTML = activeColumns.map(col => {
+            const val = (row[col.id] || '').trim();
+            return `<td class="namu-content-cell text-center font-bold text-slate-700">${val}</td>`;
+          }).join('');
+
+          return `
+            <tr>
+              <td class="namu-content-cell font-bold text-center flex items-center justify-center py-2">
+                <span class="text-white text-[10px] px-1.5 py-0.5 rounded font-black shadow-sm" style="background-color: ${row.color}">${row.party}</span>
+              </td>
+              ${colsHTML}
+            </tr>
+          `;
+        }).join('');
+
+        let eduRows = config.eduData.map(row => {
+          return `
+            <tr>
+              <td class="namu-content-cell font-bold text-center flex items-center justify-center py-1.5">
+                <span class="text-white text-[10px] px-1.5 py-0.5 rounded font-black shadow-sm" style="background-color: ${row.color}">${row.type}</span>
+              </td>
+              <td colspan="${activeColumns.length}" class="namu-content-cell text-center font-bold text-slate-700">${row.seats}</td>
+            </tr>
+          `;
+        }).join('');
+
+        let headerColsHTML = activeColumns.map(col => {
+          return `<td style="width: ${80 / activeColumns.length}%">${col.label}</td>`;
+        }).join('');
+
+        let templateRows = `
+          <tr>
+            <td colspan="${colspanVal}" class="namu-media-placeholder p-0">
+              ${buildVideoEmbedHTML(config.videoUrl, '재보궐 선거 개표 현황', config.videoCaption)}
+            </td>
+          </tr>
+          <!-- 재보선용 5칸 내비게이션 바 -->
+          ${buildNamuNavRowHTML(colspanVal)}
+          <tr>
+            <td class="namu-header-left">투표율</td>
+            <td colspan="${colspanVal - 1}" class="namu-content-cell font-semibold">${config.turnout}</td>
+          </tr>
+          <!-- 결과 헤더 -->
+          <tr>
+            <td colspan="${colspanVal}" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">선거 결과</td>
+          </tr>
+          <tr class="bg-slate-100 font-bold text-center text-teal-800 text-[10px]">
+            <td style="width: 20%">정당</td>
+            ${headerColsHTML}
+          </tr>
+          ${byRows}
+          <tr class="bg-slate-100 font-bold text-center text-teal-850 text-[10.5px]">
+            <td>성향</td>
+            <td colspan="${activeColumns.length}">교육감</td>
+          </tr>
+          ${eduRows}
+        `;
+        tbody.insertAdjacentHTML('beforeend', templateRows);
+
+      } else if (currentTemplate === 'presidential') {
+        // 이미지 5: 대통령선거 전용 렌더링
+        let templateRows = `
+          <!-- 선거 벽보 영역 -->
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              <img src="${config.posterImg}" alt="선거 벽보" class="w-full h-auto object-cover max-h-56" onerror="this.outerHTML='<div class=\'py-12 bg-slate-50 text-slate-400 text-xs font-bold\'>[선거 벽보 이미지 설정 필요]</div>'">
+              <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">후보자들의 선거 벽보</div>
+            </td>
+          </tr>
+          <!-- 대통령선거 전용 5칸 내비게이션 바 -->
+          ${buildNamuNavRowHTML(5)}
+          <tr>
+            <td class="namu-header-left">투표율</td>
+            <td colspan="4" class="namu-content-cell font-semibold">${config.turnout}</td>
+          </tr>
+          <!-- 선거 결과 헤더 -->
+          <tr>
+            <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">선거 결과</td>
+          </tr>
+          <!-- 후보명 및 대비 바그래프 -->
+          <tr class="bg-slate-50 font-bold text-xs text-center">
+            <td class="p-2 border-r" colspan="1" style="width:25%">후보</td>
+            <td class="p-2 border-r" colspan="2" style="width:37.5%; color: ${config.candidate1.color};">
+              <span class="bg-blue-800 text-white text-[10px] px-1.5 py-0.5 rounded font-black mr-1">${config.candidate1.party}</span><br>
+              <span class="text-base font-black">${config.candidate1.name}</span>
+            </td>
+            <td class="p-2" colspan="2" style="width:37.5%; color: ${config.candidate2.color};">
+              <span class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded font-black mr-1">${config.candidate2.party}</span><br>
+              <span class="text-base font-black">${config.candidate2.name}</span>
+            </td>
+          </tr>
+          <!-- 득표율 그래프 슬라이더 -->
+          <tr>
+            <td class="namu-header-left">득표율</td>
+            <td colspan="4" class="p-2 bg-white">
+              <div class="flex justify-between items-center text-xs font-black text-slate-800 mb-1 px-1">
+                <span>${config.candidate1.ratio}</span>
+                <span>${config.candidate2.ratio}</span>
+              </div>
+              <div class="namu-progress-bar flex w-full bg-slate-200 rounded overflow-hidden">
+                <div style="width: ${parseFloat(config.candidate1.ratio)}%; background-color: ${config.candidate1.color};"></div>
+                <div class="bg-slate-300" style="width: ${100 - parseFloat(config.candidate1.ratio) - parseFloat(config.candidate2.ratio)}%;"></div>
+                <div style="width: ${parseFloat(config.candidate2.ratio)}%; background-color: ${config.candidate2.color};"></div>
+              </div>
+            </td>
+          </tr>
+          <!-- 득표수 -->
+          <tr>
+            <td class="namu-header-left">득표수</td>
+            <td class="namu-content-cell text-center font-bold text-slate-700" colspan="2">${config.candidate1.votes}</td>
+            <td class="namu-content-cell text-center font-bold text-slate-700" colspan="2">${config.candidate2.votes}</td>
+          </tr>
+          <!-- 당선인 헤더 -->
+          <tr>
+            <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">대통령 당선인</td>
+          </tr>
+          <!-- 당선인 증명 대형 카드 -->
+          <tr>
+            <td colspan="5" class="p-0.5 bg-slate-50 text-center">
+              <img src="${config.candidate1.img}" alt="대통령 당선인" class="w-full h-80 object-cover border-b" onerror="this.outerHTML='<div class=\'py-12 text-slate-400 text-xs font-bold\'>[인물 사진 없음]</div>'">
+              <div class="text-white py-2.5" style="background-color: ${config.candidate1.color}">
+                <div class="text-[11px] font-black opacity-90">${config.candidate1.party}</div>
+                <div class="text-lg font-black tracking-widest mt-0.5">${config.candidate1.name}</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', templateRows);
+      }
+    }
+
+    // Export Table container to crisp high-res PNG image
+    function exportToImage() {
+      const container = document.getElementById('infobox-capture-area');
+      html2canvas(container, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `${runtimeData[currentTemplate].title}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('성공적으로 선거 인포박스 이미지가 저장되었습니다.');
+      }).catch(err => {
+        showToast('이미지 처리 중 오류 발생: ' + err.message);
+      });
+    }
+
+    // Generates perfect Namuwiki native table markdown syntax to copy
+    function copyWikiSyntax() {
+      const config = runtimeData[currentTemplate];
+      let code = `||<tablewidth=420><tablebordercolor=${config.color1}><tablealign=right> {{{\#fff '''${config.title}'''}}} [[분류:선거 인포박스]] ||\n`;
+      code += `||<colspan=3><bgcolor=${config.color2}> {{{\#fff '''${config.subtitle}'''}}} ||\n`;
+      
+      if (currentTemplate === 'national') {
+        code += `||<bgcolor=#f2f2f2><width=110> '''사유''' ||<colspan=2> ${config.reason} ||\n`;
+        code += `||<bgcolor=#f2f2f2> '''투표율''' ||<colspan=2> ${config.turnout} ||\n`;
+        code += `||<colspan=3><bgcolor=${config.color2}> '''개표''' ||\n`;
+        code += `|| 찬성: ${config.proRatio} ||<colspan=2> 반대: ${config.conRatio} ||\n`;
+        code += `||<colspan=3><bgcolor=${config.color2}> '''결과''' ||\n`;
+        code += `||<colspan=3><bgcolor=#0000ff> {{{\#fff '''${config.resultCaption}'''}}} ||\n`;
+      } else {
+        config.fields.forEach(f => {
+          code += `||<bgcolor=#f2f2f2><width=110> '''${f.label}''' ||<colspan=2> ${f.val} ||\n`;
+        });
+      }
+      
+      code += `||<width=33%><bgcolor=#ffffff> [[${config.prev}]] ||<width=34%><bgcolor=#ffffff> [[${config.center}]] ||<width=33%><bgcolor=#ffffff> [[${config.next}]] ||\n`;
+      
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.style.position = 'fixed';
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast('나무위키 위키 표 문법이 클립보드에 복사되었습니다.');
+      } catch (err) {
+        showToast('복사 실패. 우측 영역을 드래그해 수동 복사하세요.');
+      }
+      
+      document.body.removeChild(textarea);
+    }
+
+    // UI Toast Messages
+    function showToast(msg) {
+      const toast = document.getElementById('toast-message');
+      const text = document.getElementById('toast-text');
+      text.innerText = msg;
+      
+      toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 3000);
+    }
+
+    // Reset Factory Presets
+    function resetToDefaultData() {
+      if (confirm('모든 커스텀 선거 데이터를 나무위키 원본으로 복구하시겠습니까?')) {
+        runtimeData = JSON.parse(JSON.stringify(dataset));
+        selectTemplate(currentTemplate);
+        showToast('원본 데이터로 동기화 완료되었습니다.');
+      }
+    }
+
+    // App Initialization Bootstrapper
+    window.onload = function() {
+      selectTemplate('national');
+      changeFont('default');
+    };
+  </script>
+</body>
+</html>
