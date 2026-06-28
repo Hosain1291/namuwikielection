@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나무위키 선거 인포박스 메이커 v4.0</title>
+  <title>나무위키 선거 인포박스 메이커 v4.1</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -154,7 +154,7 @@
       <div>
         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           나무위키 선거 인포박스 메이커
-          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v4.0</span>
+          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v4.1</span>
         </h1>
         <p class="text-xs text-slate-400">오리지널 5칸 네비게이션 & JSON 백업 데이터 연동</p>
       </div>
@@ -338,6 +338,9 @@
         prev: '1975년 2월 12일<br>제4차 국민투표',
         center: '1980년 10월 22일<br>제5차 국민투표',
         next: '1987년 10월 27일<br>제6차 국민투표',
+        videoUrl: '',
+        videoTitle: '국민투표 관련 중계 영상 및 자료 사진',
+        videoCaption: '국민투표 중계 미디어',
         mediaImg: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop',
         mediaCaption: '투표용지',
         resultImg: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=600&auto=format&fit=crop',
@@ -479,6 +482,9 @@
         prev: '2022년 3월 9일<br>20대 대선',
         center: '2025년 6월 3일<br>21대 대선',
         next: '2030년 3월 27일<br>22대 대선',
+        videoUrl: '',
+        videoTitle: '대통령선거 개표 실시간 현황 및 후보 관련 미디어',
+        videoCaption: '선거 개표 방송 중계',
         posterImg: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop',
         turnout: '79.38% ▲ 2.30%p',
         candidate1: { name: '이재명', party: '더불어민주당', color: '#004EA2', ratio: '49.42%', votes: '17,287,513', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop' },
@@ -598,18 +604,22 @@
       render();
     }
 
-    // Reusable Video Player Generator (Returns empty string if videoUrl is blank to fully hide the row)
+    // Reusable Video/Image Universal Player Generator
+    // Returns empty string if videoUrl is blank to fully hide the row
+    // Seamlessly supports Youtube, Direct MP4 video, Direct images (JPEG/PNG/Base64)
     function buildVideoEmbedHTML(videoUrl, title, caption) {
       if (!videoUrl || videoUrl.trim() === "") {
-        return ""; // No video URL provided, return empty to hide the row
+        return ""; // No URL provided, return empty to hide the row
       }
 
+      const trimmedUrl = videoUrl.trim();
+
       // 1. YouTube Handler
-      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.includes('/embed/')) {
-        let embedUrl = videoUrl;
-        if (!videoUrl.includes('/embed/')) {
+      if (trimmedUrl.includes('youtube.com') || trimmedUrl.includes('youtu.be') || trimmedUrl.includes('/embed/')) {
+        let embedUrl = trimmedUrl;
+        if (!trimmedUrl.includes('/embed/')) {
           let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-          let match = videoUrl.match(regExp);
+          let match = trimmedUrl.match(regExp);
           if (match && match[2].length == 11) {
             embedUrl = `https://www.youtube.com/embed/${match[2]}`;
           }
@@ -623,11 +633,11 @@
       }
 
       // 2. Direct Video File (.mp4, .webm, etc.)
-      if (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg') || videoUrl.includes('.mp4?') || videoUrl.includes('.webm?')) {
+      if (trimmedUrl.endsWith('.mp4') || trimmedUrl.endsWith('.webm') || trimmedUrl.endsWith('.ogg') || trimmedUrl.includes('.mp4?') || trimmedUrl.includes('.webm?')) {
         return `
           <div class="w-full h-48 bg-black">
             <video class="w-full h-full" controls playsinline>
-              <source src="${videoUrl}" type="video/mp4">
+              <source src="${trimmedUrl}" type="video/mp4">
               사용 중인 브라우저는 동영상 재생을 지원하지 않습니다.
             </video>
           </div>
@@ -635,20 +645,12 @@
         `;
       }
 
-      // 3. Fallback Link Preview
+      // 3. Fallback to Image Rendering (Supports image urls, base64 uploads)
       return `
-        <a href="${videoUrl}" target="_blank" class="block relative bg-black h-48 flex items-center justify-center overflow-hidden hover:opacity-90 transition">
-          <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover opacity-65">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
-          <div class="absolute bottom-3 left-3 text-left">
-            <span class="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded mb-1 inline-block">외부 미디어 링크</span>
-            <div class="text-white text-[11px] font-bold leading-tight line-clamp-2">${title || '미디어 주소 바로가기'}</div>
-          </div>
-          <div class="absolute w-12 h-12 bg-slate-700/90 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-up-right-from-square text-white text-base"></i>
-          </div>
-        </a>
-        <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '외부 비디오 플레이어 연결'}</div>
+        <div class="w-full h-48 bg-slate-100 flex items-center justify-center overflow-hidden">
+          <img src="${trimmedUrl}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'py-12 bg-slate-50 text-slate-400 text-xs font-bold\'>[미디어 이미지 파일 로드 실패]</div>'">
+        </div>
+        <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '지정된 미디어 이미지'}</div>
       `;
     }
 
@@ -687,6 +689,30 @@
       if (currentTemplate === 'national') {
         let nationalHTML = `
           <div class="space-y-3">
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">국민투표 미디어 슬롯 (YouTube / 사진 파일)</h3>
+            <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 또는 사진 미디어 링크 (YouTube 주소 혹은 이미지 URL - 비우면 줄 삭제)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-national-videoUrl" value="${config.videoUrl.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.videoUrl}" oninput="runtimeData.national.videoUrl = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 주소, 이미지 URL">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'national', 'videoUrl')">
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 임시 타이틀</label>
+                  <input type="text" value="${config.videoTitle || ''}" oninput="runtimeData.national.videoTitle = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 캡션 설명</label>
+                  <input type="text" value="${config.videoCaption || ''}" oninput="runtimeData.national.videoCaption = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
+              </div>
+            </div>
+
             <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">국민투표 이미지 및 벽보 파일 제어</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
               <div>
@@ -740,8 +766,24 @@
             <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">미디어 & 의석 이미지 연동</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">영상 링크 (유튜브 embed / watch 또는 mp4 비디오 주소 - 비우면 줄 삭제)</label>
-                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.assembly.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="https://www.youtube.com/embed/...">
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 또는 사진 미디어 링크 (YouTube 주소, 이미지 URL, 혹은 사진 파일 선택 - 비우면 숨김)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-assembly-videoUrl" value="${config.videoUrl.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.videoUrl}" oninput="runtimeData.assembly.videoUrl = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 주소, 이미지 URL">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'assembly', 'videoUrl')">
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 타이틀</label>
+                  <input type="text" value="${config.videoTitle || ''}" oninput="runtimeData.assembly.videoTitle = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 캡션 설명</label>
+                  <input type="text" value="${config.videoCaption || ''}" oninput="runtimeData.assembly.videoCaption = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
               </div>
               
               <!-- 이미지 및 파일 동시 선택 컨트롤 영역 -->
@@ -801,8 +843,14 @@
             <h3 class="text-xs font-bold text-pink-400 border-l-2 border-pink-500 pl-2">지방선거 미디어 & 아코디언 설정</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">선거 중계 영상 링크 (비우면 줄 삭제)</label>
-                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.local.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 및 비디오 파일 링크">
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 또는 사진 미디어 링크 (YouTube 주소, 이미지 URL, 혹은 사진 파일 선택 - 비우면 숨김)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-local-videoUrl" value="${config.videoUrl.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.videoUrl}" oninput="runtimeData.local.videoUrl = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 주소, 이미지 URL">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'local', 'videoUrl')">
+                  </label>
+                </div>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -842,8 +890,14 @@
             <h3 class="text-xs font-bold text-teal-400 border-l-2 border-teal-500 pl-2">2025 재보선 결과 및 동영상</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">중계 영상 링크 (YouTube / MP4 - 비우면 줄 삭제)</label>
-                <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData['by-election'].videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="영상 주소">
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 또는 사진 미디어 링크 (YouTube 주소, 이미지 URL, 혹은 사진 파일 선택 - 비우면 숨김)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-by-election-videoUrl" value="${config.videoUrl.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.videoUrl}" oninput="runtimeData['by-election'].videoUrl = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 주소, 이미지 URL">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'by-election', 'videoUrl')">
+                  </label>
+                </div>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mb-2">
@@ -902,6 +956,31 @@
               <div class="col-span-2">
                 <label class="block text-[11px] text-slate-400 mb-1">투표율</label>
                 <input type="text" value="${config.turnout}" oninput="runtimeData.presidential.turnout = this.value; render();" class="w-full bg-slate-800 text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-200">
+              </div>
+            </div>
+
+            <!-- 대선 유튜브/사진 미디어 슬롯 -->
+            <div class="bg-slate-900/65 p-3 rounded-lg border border-slate-800 space-y-2">
+              <div class="text-xs font-bold text-blue-400"><i class="fa-solid fa-circle-play"></i> 대선 미디어 슬롯 (YouTube / 사진 파일)</div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 또는 사진 링크 (YouTube 주소, 이미지 URL, 혹은 로컬 파일 - 비우면 줄 삭제)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-presidential-videoUrl" value="${config.videoUrl.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.videoUrl}" oninput="runtimeData.presidential.videoUrl = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 주소, 이미지 URL">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'presidential', 'videoUrl')">
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 임시 타이틀</label>
+                  <input type="text" value="${config.videoTitle || ''}" oninput="runtimeData.presidential.videoTitle = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">미디어 캡션 설명</label>
+                  <input type="text" value="${config.videoCaption || ''}" oninput="runtimeData.presidential.videoCaption = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200">
+                </div>
               </div>
             </div>
 
@@ -1022,7 +1101,7 @@
     function exportToJson() {
       try {
         const payload = {
-          version: '4.0',
+          version: '4.1',
           exportedAt: new Date().toISOString(),
           currentTemplate: currentTemplate,
           selectedFont: selectedFont,
@@ -1177,6 +1256,16 @@
 
       // 2. Custom Layout Inner Rows per Select template (100% snapshot alignment)
       if (currentTemplate === 'national') {
+        // 미디어 슬롯 행 렌더링 (비디오 혹은 사진 겸용)
+        const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
+        let videoRow = videoHTML ? `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              ${videoHTML}
+            </td>
+          </tr>
+        ` : "";
+
         // 이미지 1: 국민투표 전용 렌더링 (이미지 비어있으면 숨김 처리)
         let mediaImgRow = (config.mediaImg && config.mediaImg.trim() !== "") ? `
           <tr>
@@ -1197,6 +1286,7 @@
         ` : "";
 
         let templateRows = `
+          ${videoRow}
           ${mediaImgRow}
           <!-- 내비게이션 라인 -->
           ${buildNamuNavRowHTML(5)}
@@ -1257,7 +1347,7 @@
           `;
         }).join('');
 
-        // 유튜브 비디오가 비어있으면 숨김
+        // 유튜브 비디오 또는 미디어 사진이 비어있으면 숨김
         const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
         let videoRow = videoHTML ? `
           <tr>
@@ -1348,7 +1438,7 @@
           `;
         }).join('');
 
-        // 유튜브 비디오가 비어있으면 숨김
+        // 유튜브 비디오 또는 미디어 사진이 비어있으면 숨김
         const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
         let videoRow = videoHTML ? `
           <tr>
@@ -1402,7 +1492,7 @@
           return `<td style="width: ${80 / activeColumns.length}%">${col.label}</td>`;
         }).join('');
 
-        // 유튜브 비디오가 비어있으면 숨김
+        // 유튜브 비디오 또는 미디어 사진이 비어있으면 숨김
         const videoHTML = buildVideoEmbedHTML(config.videoUrl, '재보궐 선거 개표 현황', config.videoCaption);
         let videoRow = videoHTML ? `
           <tr>
@@ -1440,6 +1530,16 @@
       } else if (currentTemplate === 'presidential') {
         // 이미지 5: 대통령선거 전용 렌더링
 
+        // 대선 범용 미디어 행 빌드 (비디오 혹은 사진 겸용)
+        const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
+        let videoRow = videoHTML ? `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              ${videoHTML}
+            </td>
+          </tr>
+        ` : "";
+
         // 선거벽보가 비어있으면 숨김
         let posterImgRow = (config.posterImg && config.posterImg.trim() !== "") ? `
           <tr>
@@ -1456,6 +1556,7 @@
         ` : "";
 
         let templateRows = `
+          ${videoRow}
           ${posterImgRow}
           <!-- 대통령선거 전용 5칸 내비게이션 바 -->
           ${buildNamuNavRowHTML(5)}
