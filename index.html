@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나무위키 선거 인포박스 메이커 v3.9</title>
+  <title>나무위키 선거 인포박스 메이커 v4.0</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -154,7 +154,7 @@
       <div>
         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           나무위키 선거 인포박스 메이커
-          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v3.9</span>
+          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono">v4.0</span>
         </h1>
         <p class="text-xs text-slate-400">오리지널 5칸 네비게이션 & JSON 백업 데이터 연동</p>
       </div>
@@ -598,23 +598,10 @@
       render();
     }
 
-    // Reusable Video Player Generator (Supports YouTube and direct MP4/WebM video formats)
+    // Reusable Video Player Generator (Returns empty string if videoUrl is blank to fully hide the row)
     function buildVideoEmbedHTML(videoUrl, title, caption) {
-      if (!videoUrl) {
-        return `
-          <div class="relative bg-black h-48 flex items-center justify-center overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover opacity-65">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
-            <div class="absolute bottom-3 left-3 text-left">
-              <span class="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded mb-1 inline-block">비디오 대기</span>
-              <div class="text-white text-[11px] font-bold leading-tight line-clamp-2">${title || '등록된 비디오 정보가 없습니다.'}</div>
-            </div>
-            <div class="absolute w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center cursor-pointer">
-              <i class="fa-solid fa-play text-white text-lg ml-0.5"></i>
-            </div>
-          </div>
-          <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${caption || '동영상 안내'}</div>
-        `;
+      if (!videoUrl || videoUrl.trim() === "") {
+        return ""; // No video URL provided, return empty to hide the row
       }
 
       // 1. YouTube Handler
@@ -700,7 +687,31 @@
       if (currentTemplate === 'national') {
         let nationalHTML = `
           <div class="space-y-3">
-            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">국민투표 개표 현황</h3>
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">국민투표 이미지 및 벽보 파일 제어</h3>
+            <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">투표용지 이미지 설정 (비우면 숨겨짐)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-national-mediaImg" value="${config.mediaImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.mediaImg}" oninput="runtimeData.national.mediaImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="이미지 주소 URL 입력">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'national', 'mediaImg')">
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">선거 결과 이미지 설정 (비우면 숨겨짐)</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-national-resultImg" value="${config.resultImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.resultImg}" oninput="runtimeData.national.resultImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="결과 이미지 주소 URL 입력">
+                  <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
+                    파일 선택
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'national', 'resultImg')">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2 mt-4">국민투표 개표 현황</h3>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-[11px] text-slate-400 mb-1">사유</label>
@@ -729,13 +740,13 @@
             <h3 class="text-xs font-bold text-blue-400 border-l-2 border-blue-500 pl-2">미디어 & 의석 이미지 연동</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-800">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">영상 링크 (유튜브 embed / watch 또는 mp4 비디오 주소)</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">영상 링크 (유튜브 embed / watch 또는 mp4 비디오 주소 - 비우면 줄 삭제)</label>
                 <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.assembly.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="https://www.youtube.com/embed/...">
               </div>
               
               <!-- 이미지 및 파일 동시 선택 컨트롤 영역 -->
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">국회 의석 분포 이미지 설정</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">국회 의석 분포 이미지 설정 (비우면 줄 삭제)</label>
                 <div class="flex gap-2">
                   <input type="text" id="input-assembly-seatsImg" value="${config.seatsImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.seatsImg}" oninput="runtimeData.assembly.seatsImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="이미지 URL 입력">
                   <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
@@ -790,7 +801,7 @@
             <h3 class="text-xs font-bold text-pink-400 border-l-2 border-pink-500 pl-2">지방선거 미디어 & 아코디언 설정</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">선거 중계 영상 링크</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">선거 중계 영상 링크 (비우면 줄 삭제)</label>
                 <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData.local.videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="유튜브 및 비디오 파일 링크">
               </div>
             </div>
@@ -831,7 +842,7 @@
             <h3 class="text-xs font-bold text-teal-400 border-l-2 border-teal-500 pl-2">2025 재보선 결과 및 동영상</h3>
             <div class="grid grid-cols-1 gap-3 bg-slate-900/60 p-3 rounded border border-slate-850 mb-2">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">중계 영상 링크 (YouTube / MP4)</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">중계 영상 링크 (YouTube / MP4 - 비우면 줄 삭제)</label>
                 <input type="text" value="${config.videoUrl || ''}" oninput="runtimeData['by-election'].videoUrl = this.value; render();" class="w-full bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="영상 주소">
               </div>
             </div>
@@ -896,7 +907,7 @@
 
             <!-- 선거 벽보 등록 영역 -->
             <div class="bg-slate-900/65 p-3 rounded-lg border border-slate-800 space-y-2">
-              <div class="text-xs font-bold text-amber-400"><i class="fa-solid fa-image"></i> 선거 벽보 이미지 설정</div>
+              <div class="text-xs font-bold text-amber-400"><i class="fa-solid fa-image"></i> 선거 벽보 이미지 설정 (비우면 줄 삭제)</div>
               <div class="flex gap-2">
                 <input type="text" id="input-presidential-posterImg" value="${config.posterImg.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.posterImg}" oninput="runtimeData.presidential.posterImg = this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-200 font-mono" placeholder="벽보 이미지 URL 주소 입력">
                 <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
@@ -920,7 +931,7 @@
               
               <!-- 당선인 인물사진 로컬 파일 업로드 연동 -->
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">당선인 대형 사진 이미지 설정</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">당선인 대형 사진 이미지 설정 (비우면 숨겨짐)</label>
                 <div class="flex gap-2">
                   <input type="text" id="input-presidential-candidate1-img" value="${config.candidate1.img.startsWith('data:') ? '[로컬 이미지 세팅 완료]' : config.candidate1.img}" oninput="runtimeData.presidential.candidate1.img=this.value; render();" class="flex-1 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 text-slate-300 font-mono" placeholder="당선인 사진 URL 주소 입력">
                   <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded cursor-pointer flex items-center justify-center font-bold shrink-0 transition">
@@ -1011,7 +1022,7 @@
     function exportToJson() {
       try {
         const payload = {
-          version: '3.9',
+          version: '4.0',
           exportedAt: new Date().toISOString(),
           currentTemplate: currentTemplate,
           selectedFont: selectedFont,
@@ -1166,14 +1177,27 @@
 
       // 2. Custom Layout Inner Rows per Select template (100% snapshot alignment)
       if (currentTemplate === 'national') {
-        // 이미지 1: 국민투표 전용 렌더링
-        let templateRows = `
+        // 이미지 1: 국민투표 전용 렌더링 (이미지 비어있으면 숨김 처리)
+        let mediaImgRow = (config.mediaImg && config.mediaImg.trim() !== "") ? `
           <tr>
             <td colspan="5" class="namu-media-placeholder">
               <img src="${config.mediaImg}" alt="투표용지" class="w-full h-44 object-cover animate-fade-in">
-              <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${config.mediaCaption}</div>
+              <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">${config.mediaCaption || '투표용지'}</div>
             </td>
           </tr>
+        ` : "";
+
+        let resultImgRow = (config.resultImg && config.resultImg.trim() !== "") ? `
+          <tr>
+            <td colspan="5" class="namu-media-placeholder p-0">
+              <img src="${config.resultImg}" alt="헌법개정 가결" class="w-full h-40 object-cover">
+              <div class="bg-blue-800 text-white font-bold text-center py-1.5 text-xs tracking-wider">${config.resultCaption || '결과'}</div>
+            </td>
+          </tr>
+        ` : "";
+
+        let templateRows = `
+          ${mediaImgRow}
           <!-- 내비게이션 라인 -->
           ${buildNamuNavRowHTML(5)}
           <tr>
@@ -1203,9 +1227,9 @@
               </div>
               <!-- 정밀 가로 프로그레스 바 -->
               <div class="namu-progress-bar flex w-full bg-slate-200 mt-1">
-                <div style="width: ${parseFloat(config.proRatio)}%; background-color: #0000ff;"></div>
-                <div class="bg-slate-300" style="width: ${100 - parseFloat(config.proRatio) - parseFloat(config.conRatio)}%;"></div>
-                <div style="width: ${parseFloat(config.conRatio)}%; background-color: #ff0000;"></div>
+                <div style="width: ${parseFloat(config.proRatio) || 0}%; background-color: #0000ff;"></div>
+                <div class="bg-slate-300" style="width: ${100 - (parseFloat(config.proRatio) || 0) - (parseFloat(config.conRatio) || 0)}%;"></div>
+                <div style="width: ${parseFloat(config.conRatio) || 0}%; background-color: #ff0000;"></div>
               </div>
             </td>
           </tr>
@@ -1213,12 +1237,7 @@
           <tr>
             <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">결과</td>
           </tr>
-          <tr>
-            <td colspan="5" class="namu-media-placeholder p-0">
-              <img src="${config.resultImg}" alt="헌법개정 가결" class="w-full h-40 object-cover">
-              <div class="bg-blue-800 text-white font-bold text-center py-1.5 text-xs tracking-wider">${config.resultCaption}</div>
-            </td>
-          </tr>
+          ${resultImgRow}
         `;
         tbody.insertAdjacentHTML('beforeend', templateRows);
 
@@ -1238,12 +1257,28 @@
           `;
         }).join('');
 
-        let templateRows = `
+        // 유튜브 비디오가 비어있으면 숨김
+        const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
+        let videoRow = videoHTML ? `
           <tr>
             <td colspan="5" class="namu-media-placeholder p-0">
-              ${buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption)}
+              ${videoHTML}
             </td>
           </tr>
+        ` : "";
+
+        // 의석 분포도가 비어있으면 숨김
+        let seatsImgRow = (config.seatsImg && config.seatsImg.trim() !== "") ? `
+          <tr>
+            <td colspan="5" class="bg-slate-50 p-3 border-b text-center">
+              <img src="${config.seatsImg}" alt="국회 의석 분포" class="w-full h-auto object-contain max-h-56 mx-auto rounded border border-slate-200 shadow-sm">
+              <div class="text-[10px] text-slate-500 mt-2 font-semibold">제20대 국회 정당별 의석 분포 상황</div>
+            </td>
+          </tr>
+        ` : "";
+
+        let templateRows = `
+          ${videoRow}
           <!-- 내비게이션 라인 -->
           ${buildNamuNavRowHTML(5)}
           <tr>
@@ -1254,13 +1289,7 @@
           <tr>
             <td colspan="5" class="namu-sub-title-bar select-none" style="background-color: ${config.color2};">선거 결과</td>
           </tr>
-          <!-- 국회의원 의석 분포 이미지 -->
-          <tr>
-            <td colspan="5" class="bg-slate-50 p-3 border-b text-center">
-              <img src="${config.seatsImg}" alt="국회 의석 분포" class="w-full h-auto object-contain max-h-56 mx-auto rounded border border-slate-200 shadow-sm" onerror="this.outerHTML='<div class=\'py-6 text-slate-400 text-xs font-bold\'>[의석 분포 이미지 로드 실패/미등록]</div>'">
-              <div class="text-[10px] text-slate-500 mt-2 font-semibold">제20대 국회 정당별 의석 분포 상황</div>
-            </td>
-          </tr>
+          ${seatsImgRow}
           <!-- 상세 표 헤더 -->
           <tr class="bg-slate-100 font-bold text-center text-slate-700 text-[11px]">
             <td style="width: 25%">정당</td>
@@ -1285,7 +1314,7 @@
                 <!-- 점유율 시각화 바 -->
                 <div class="col-span-4 px-1">
                   <div class="w-full bg-slate-100 rounded-sm h-3 overflow-hidden border border-slate-200">
-                    <div class="h-full rounded-sm" style="width: ${parseFloat(item.ratio)}%; background-color: ${item.color}"></div>
+                    <div class="h-full rounded-sm" style="width: ${parseFloat(item.ratio) || 0}%; background-color: ${item.color}"></div>
                   </div>
                 </div>
                 <div class="col-span-2 text-center font-bold text-slate-700">${item.count}</div>
@@ -1319,12 +1348,18 @@
           `;
         }).join('');
 
-        let templateRows = `
+        // 유튜브 비디오가 비어있으면 숨김
+        const videoHTML = buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption);
+        let videoRow = videoHTML ? `
           <tr>
             <td colspan="5" class="namu-media-placeholder p-0">
-              ${buildVideoEmbedHTML(config.videoUrl, config.videoTitle, config.videoCaption)}
+              ${videoHTML}
             </td>
           </tr>
+        ` : "";
+
+        let templateRows = `
+          ${videoRow}
           ${buildNamuNavRowHTML(5)}
           <tr>
             <td class="namu-header-left">투표율</td>
@@ -1367,12 +1402,18 @@
           return `<td style="width: ${80 / activeColumns.length}%">${col.label}</td>`;
         }).join('');
 
-        let templateRows = `
+        // 유튜브 비디오가 비어있으면 숨김
+        const videoHTML = buildVideoEmbedHTML(config.videoUrl, '재보궐 선거 개표 현황', config.videoCaption);
+        let videoRow = videoHTML ? `
           <tr>
             <td colspan="${colspanVal}" class="namu-media-placeholder p-0">
-              ${buildVideoEmbedHTML(config.videoUrl, '재보궐 선거 개표 현황', config.videoCaption)}
+              ${videoHTML}
             </td>
           </tr>
+        ` : "";
+
+        let templateRows = `
+          ${videoRow}
           <!-- 재보선용 5칸 내비게이션 바 -->
           ${buildNamuNavRowHTML(colspanVal)}
           <tr>
@@ -1398,14 +1439,24 @@
 
       } else if (currentTemplate === 'presidential') {
         // 이미지 5: 대통령선거 전용 렌더링
-        let templateRows = `
-          <!-- 선거 벽보 영역 -->
+
+        // 선거벽보가 비어있으면 숨김
+        let posterImgRow = (config.posterImg && config.posterImg.trim() !== "") ? `
           <tr>
             <td colspan="5" class="namu-media-placeholder p-0">
-              <img src="${config.posterImg}" alt="선거 벽보" class="w-full h-auto object-cover max-h-56" onerror="this.outerHTML='<div class=\'py-12 bg-slate-50 text-slate-400 text-xs font-bold\'>[선거 벽보 이미지 설정 필요]</div>'">
+              <img src="${config.posterImg}" alt="선거 벽보" class="w-full h-auto object-cover max-h-56">
               <div class="bg-white border-t py-1 text-[11px] text-slate-500 font-semibold text-center">후보자들의 선거 벽보</div>
             </td>
           </tr>
+        ` : "";
+
+        // 당선인 이미지 비어있으면 텍스트 카드만 렌더링
+        let candidateImgElement = (config.candidate1.img && config.candidate1.img.trim() !== "") ? `
+          <img src="${config.candidate1.img}" alt="대통령 당선인" class="w-full h-80 object-cover border-b">
+        ` : "";
+
+        let templateRows = `
+          ${posterImgRow}
           <!-- 대통령선거 전용 5칸 내비게이션 바 -->
           ${buildNamuNavRowHTML(5)}
           <tr>
@@ -1437,9 +1488,9 @@
                 <span>${config.candidate2.ratio}</span>
               </div>
               <div class="namu-progress-bar flex w-full bg-slate-200 rounded overflow-hidden">
-                <div style="width: ${parseFloat(config.candidate1.ratio)}%; background-color: ${config.candidate1.color};"></div>
-                <div class="bg-slate-300" style="width: ${100 - parseFloat(config.candidate1.ratio) - parseFloat(config.candidate2.ratio)}%;"></div>
-                <div style="width: ${parseFloat(config.candidate2.ratio)}%; background-color: ${config.candidate2.color};"></div>
+                <div style="width: ${parseFloat(config.candidate1.ratio) || 0}%; background-color: ${config.candidate1.color};"></div>
+                <div class="bg-slate-300" style="width: ${100 - (parseFloat(config.candidate1.ratio) || 0) - (parseFloat(config.candidate2.ratio) || 0)}%;"></div>
+                <div style="width: ${parseFloat(config.candidate2.ratio) || 0}%; background-color: ${config.candidate2.color};"></div>
               </div>
             </td>
           </tr>
@@ -1456,7 +1507,7 @@
           <!-- 당선인 증명 대형 카드 -->
           <tr>
             <td colspan="5" class="p-0.5 bg-slate-50 text-center">
-              <img src="${config.candidate1.img}" alt="대통령 당선인" class="w-full h-80 object-cover border-b" onerror="this.outerHTML='<div class=\'py-12 text-slate-400 text-xs font-bold\'>[인물 사진 없음]</div>'">
+              ${candidateImgElement}
               <div class="text-white py-2.5" style="background-color: ${config.candidate1.color}">
                 <div class="text-[11px] font-black opacity-90">${config.candidate1.party}</div>
                 <div class="text-lg font-black tracking-widest mt-0.5">${config.candidate1.name}</div>
